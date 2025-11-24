@@ -1,0 +1,63 @@
+stages:
+  - build
+
+before_script:
+  - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  - rustup update stable
+  - rustup default stable
+
+build_windows:
+  stage: build
+  image: rust:latest
+  before_script:
+    - apt-get update -qq && apt-get install -y gcc-mingw-w64-x86-64-win32
+  script:
+    - cd $CI_PROJECT_DIR
+    - rustup target add x86_64-pc-windows-gnu
+    - cargo build --release --target x86_64-pc-windows-gnu
+  artifacts:
+    paths:
+      - target/x86_64-pc-windows-gnu/release/*.d
+      - target/x86_64-pc-windows-gnu/release/*.dll
+  variables:
+    GIT_STRATEGY: clone
+    GIT_CLONE_PATH: $CI_PROJECT_DIR
+#
+#build_linux:
+#  stage: build
+#  image: rust:latest
+#  script:
+#    - rustup target add x86_64-unknown-linux-gnu
+#    - cargo build --release --target x86_64-unknown-linux-gnu
+#  artifacts:
+#    paths:
+#      - target/x86_64-unknown-linux-gnu/release/*.d
+#      - target/x86_64-unknown-linux-gnu/release/*.so
+#
+#build_macos:
+#  stage: build
+#  image: rust:latest
+#  tags:
+#    - macos
+#  before_script:
+#    - apt-get update -qq && apt-get install -y clang cmake xz-utils
+#    - git config --global http.postBuffer 1048576000
+#    - git config --global https.postBuffer 1048576000
+#    - if [ ! -d osxcross ]; then git clone https://github.com/tpoechtrager/osxcross; fi
+#    - cd osxcross
+#    - wget -nc https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/MacOSX11.3.sdk.tar.xz
+#    - if [ ! -d tarballs ]; then mkdir tarballs; fi
+#    - mv MacOSX11.3.sdk.tar.xz tarballs/
+#    - UNATTENDED=yes OSX_VERSION_MIN=10.10 ./build.sh
+#    - rm -r tarballs
+#    - cd ..
+#    - cp config /usr/local/cargo/config
+#  script:
+#    - export PATH="$(pwd)/osxcross/target/bin:$PATH"
+#    - export LIBZ_SYS_STATIC=1
+#    - rustup target add aarch64-apple-darwin
+#    - cargo build --release --target aarch64-apple-darwin
+#  artifacts:
+#    paths:
+#      - target/aarch64-apple-darwin/release/*.d
+#      - target/aarch64-apple-darwin/release/*.dylib
